@@ -1,16 +1,19 @@
 
 
 .text-platzi {
-  color: #97c93e !important;
+  color: #0076b5dd !important;
+
+  font-weight: bold;
+  
 }
 
 .btn-platzi {
-  background-color: #97c93e;
+  background-color: #0077b5;
   color: white;
 }
 
 .btn-platzi:hover {
-  background-color: #82ad36;
+  background-color: #0077b5;
 }
 
 #header img {
@@ -58,3 +61,24 @@
 #footer a {
   color: white;
 }
+
+.profile{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0px;
+}
+
+.profile img {
+  width: 120px;
+  height: 120px;
+  border-radius: 60px;
+  overflow:hidden;
+}
+
+
+
+
+
