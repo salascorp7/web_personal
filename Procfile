@@ -1,1 +1,1 @@
-heroku buildpacks:set heroku/php
+web: node server.js

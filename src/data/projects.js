@@ -1,0 +1,117 @@
+const projects = [
+  {
+    id: 1,
+    title: 'Censo 2018',
+    description: 'Dashboard con las principales cifras del Censo 2018 realizado por el DANE.',
+    image: '/assets/speakers/census.jpg',
+    badges: [
+      { text: 'AWS', bg: 'warning', textColor: 'dark' },
+      { text: 'Power BI', bg: 'info', textColor: 'dark' },
+      { text: 'Python', bg: 'danger' },
+      { text: 'PostgreSQL', bg: 'secondary' },
+    ],
+    link: 'https://app.powerbi.com/view?r=eyJrIjoiMmU3ZjU5NzktMzg0YS00NzZjLWJiMWMtZmJjNWJlMWNiMTRmIiwidCI6IjI3N2UwZWIwLTc2OWYtNDM4Ni1hOTQxLTNmZTQwNTViYTdkNSJ9',
+  },
+  {
+    id: 2,
+    title: 'GEIH',
+    description: 'Dashboard con las principales cifras de la Gran Encuesta Integrada de Hogares del DANE.',
+    image: '/assets/speakers/Mi%20proyecto.jpg',
+    badges: [
+      { text: 'AWS', bg: 'warning', textColor: 'dark' },
+      { text: 'Power BI', bg: 'info', textColor: 'dark' },
+      { text: 'Python', bg: 'danger' },
+      { text: 'PostgreSQL', bg: 'secondary' },
+    ],
+    link: 'https://app.powerbi.com/view?r=eyJrIjoiMTgzMjRmZTAtYTE2NS00NGViLTg0NzUtZTVmNDNhNGZkYmE5IiwidCI6IjI3N2UwZWIwLTc2OWYtNDM4Ni1hOTQxLTNmZTQwNTViYTdkNSJ9',
+  },
+  {
+    id: 3,
+    title: 'API Twitter',
+    description: 'Buscador de tweets mediante hashtags, con visualización de fechas y variables principales.',
+    image: '/assets/speakers/twitter_cuadrada.jpg',
+    badges: [
+      { text: 'R', bg: 'primary' },
+      { text: 'Shiny', bg: 'success' },
+      { text: 'API REST', bg: 'dark' },
+    ],
+    link: 'https://salascorp.shinyapps.io/appTweet/',
+  },
+  {
+    id: 4,
+    title: 'Segmentación K-means',
+    description: 'Dashboard para segmentar el dataset Iris, definiendo el número de clusters y la variable a analizar.',
+    image: '/assets/speakers/segmentos_cuadrada.jpg',
+    badges: [
+      { text: 'Python', bg: 'danger' },
+      { text: 'Dash', bg: 'secondary' },
+      { text: 'Heroku', bg: 'light', textColor: 'dark' },
+    ],
+    link: 'https://segmentacion-0f498cfec998.herokuapp.com/',
+  },
+  {
+    id: 5,
+    title: 'Cálculo de Muestra',
+    description: 'Calculadora para definir tamaños de muestra representativa estadísticamente e identificar el error.',
+    image: '/assets/speakers/muestra_cuadrada.jpg',
+    badges: [
+      { text: 'Python', bg: 'danger' },
+      { text: 'Dash', bg: 'secondary' },
+      { text: 'Heroku', bg: 'light', textColor: 'dark' },
+    ],
+    link: 'https://muestra-94cc27b9100d.herokuapp.com/',
+  },
+  {
+    id: 6,
+    title: 'Monitoreo de esta Web',
+    description: 'Dashboard para el monitoreo del tráfico generado por esta web, identificando las principales variables.',
+    image: '/assets/speakers/trafico_cuadrado.jpg',
+    badges: [
+      { text: 'Looker Studio', bg: 'warning', textColor: 'dark' },
+      { text: 'Google Analytics', bg: 'info', textColor: 'dark' },
+    ],
+    link: 'https://datastudio.google.com/embed/reporting/7f3ebcee-60f2-4aa7-97f0-febeaf6bfa45/page/1M',
+  },
+  {
+    id: 7,
+    title: 'Predicción Felicidad de un País',
+    description: 'Modelo de machine learning para predecir el índice global de felicidad de un país.',
+    image: '/assets/speakers/sonriendo.jpg',
+    badges: [
+      { text: 'Flask', bg: 'warning', textColor: 'dark' },
+      { text: 'JavaScript', bg: 'info', textColor: 'dark' },
+      { text: 'Python', bg: 'danger' },
+      { text: 'Ajax', bg: 'secondary' },
+    ],
+    link: 'https://modelofelicidad-c6c6e3655c88.herokuapp.com/',
+  },
+  {
+    id: 8,
+    title: 'Predicción de Impagos en Tarjetas',
+    description: 'Modelo de machine learning para predecir el impago de una tarjeta de crédito usando base de Kaggle.',
+    image: '/assets/speakers/tc.jpg',
+    badges: [
+      { text: 'AWS', bg: 'warning', textColor: 'dark' },
+      { text: 'Power BI', bg: 'info', textColor: 'dark' },
+      { text: 'Python', bg: 'danger' },
+      { text: 'PostgreSQL', bg: 'secondary' },
+    ],
+    link: null,
+    comingSoon: true,
+  },
+  {
+    id: 9,
+    title: 'Juego de Sonic',
+    description: 'Juego de plataformas construido con Canvas API y JavaScript puro. ¡Esquiva obstáculos y llega a casa!',
+    image: '/assets/speakers/seguridad.jpg',
+    badges: [
+      { text: 'Canvas API', bg: 'primary' },
+      { text: 'JavaScript', bg: 'warning', textColor: 'dark' },
+      { text: 'HTML5', bg: 'danger' },
+    ],
+    link: '/juego',
+    internal: true,
+  },
+]
+
+export default projects

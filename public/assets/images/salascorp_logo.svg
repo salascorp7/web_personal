@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
+  <defs>
+    <linearGradient id="hexGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0077b5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00a0dc;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00c6ff;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#0077b5;stop-opacity:0" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Hexagon background -->
+  <polygon
+    points="40,8 62,20 62,60 40,72 18,60 18,20"
+    fill="url(#hexGrad)"
+    filter="url(#glow)"
+  />
+
+  <!-- Hexagon inner glow -->
+  <polygon
+    points="40,12 59,23 59,57 40,68 21,57 21,23"
+    fill="url(#glowGrad)"
+  />
+
+  <!-- Neural network nodes -->
+  <circle cx="40" cy="28" r="3.5" fill="white" opacity="0.95"/>
+  <circle cx="28" cy="44" r="3.5" fill="white" opacity="0.95"/>
+  <circle cx="52" cy="44" r="3.5" fill="white" opacity="0.95"/>
+  <circle cx="40" cy="56" r="3.5" fill="white" opacity="0.95"/>
+
+  <!-- Neural network lines -->
+  <line x1="40" y1="28" x2="28" y2="44" stroke="white" stroke-width="1.5" opacity="0.7"/>
+  <line x1="40" y1="28" x2="52" y2="44" stroke="white" stroke-width="1.5" opacity="0.7"/>
+  <line x1="28" y1="44" x2="52" y2="44" stroke="white" stroke-width="1.5" opacity="0.7"/>
+  <line x1="28" y1="44" x2="40" y2="56" stroke="white" stroke-width="1.5" opacity="0.7"/>
+  <line x1="52" y1="44" x2="40" y2="56" stroke="white" stroke-width="1.5" opacity="0.7"/>
+  <line x1="40" y1="28" x2="40" y2="56" stroke="white" stroke-width="1" opacity="0.35"/>
+
+  <!-- "SC" monogram inside hexagon -->
+  <text
+    x="40" y="43"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-family="'Segoe UI', Arial, sans-serif"
+    font-size="0"
+    fill="white"
+    font-weight="800"
+    opacity="0"
+  >SC</text>
+
+  <!-- Company name: Salas -->
+  <text
+    x="82" y="38"
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-size="26"
+    font-weight="800"
+    fill="#ffffff"
+    letter-spacing="1"
+  >Salas</text>
+
+  <!-- Company name: Corp -->
+  <text
+    x="82" y="62"
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-size="16"
+    font-weight="400"
+    fill="#00a0dc"
+    letter-spacing="5"
+  >CORP</text>
+
+  <!-- Decorative accent line -->
+  <rect x="82" y="66" width="108" height="2" rx="1" fill="url(#hexGrad)" opacity="0.6"/>
+
+  <!-- Tagline -->
+  <text
+    x="82" y="78"
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-size="9"
+    font-weight="300"
+    fill="#7ec8e3"
+    letter-spacing="2"
+    opacity="0.85"
+  >AI · DATA · INTELLIGENCE</text>
+</svg>
