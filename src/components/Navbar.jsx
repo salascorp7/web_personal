@@ -3,6 +3,12 @@ import { useLocation } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
 import { useAuth } from '../context/AuthContext'
 
+const MenuIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
+  </svg>
+)
+
 const PersonIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
@@ -91,8 +97,9 @@ function AuthSection() {
 }
 
 export default function Navbar() {
-  const collapseRef = useRef(null)
-  const location    = useLocation()
+  const collapseRef  = useRef(null)
+  const location     = useLocation()
+  const { isAdmin }  = useAuth()
 
   useEffect(() => {
     if (collapseRef.current?.classList.contains('show')) {
@@ -103,6 +110,19 @@ export default function Navbar() {
   return (
     <nav id="header" className="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
       <div className="container">
+
+        {/* Sidebar trigger — solo admin */}
+        {isAdmin && (
+          <button
+            className="btn sidebar-trigger me-2"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#mainSidebar"
+            aria-controls="mainSidebar"
+            aria-label="Abrir menú lateral"
+          >
+            <MenuIcon />
+          </button>
+        )}
 
         {/* Logo — siempre a la izquierda */}
         <a className="navbar-brand" href="#main">

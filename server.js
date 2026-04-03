@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { OAuth2Client } from 'google-auth-library'
 import jwt from 'jsonwebtoken'
+import { google } from 'googleapis'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname  = dirname(__filename)
@@ -41,6 +42,59 @@ if (process.env.NODE_ENV === 'production') {
     next()
   })
 }
+
+// ── Google Sheets — Links ───────────────────────────────────────────────────
+const SHEET_ID = process.env.GSHEETS_LINKS_ID || ''
+const SA_B64   = process.env.GOOGLE_SERVICE_ACCOUNT_B64 || ''
+
+const AUTO_COLORS = ['#2a9d8f','#e63946','#f0b90b','#1a56db','#7c3aed','#e76f51','#457b9d','#0077b5']
+
+let linksCache    = null
+let linksCacheTs  = 0
+const CACHE_TTL   = 5 * 60 * 1000 // 5 minutos
+
+async function getLinksFromSheet() {
+  if (linksCache && Date.now() - linksCacheTs < CACHE_TTL) return linksCache
+
+  if (!SHEET_ID || !SA_B64) return []
+
+  const credentials = JSON.parse(Buffer.from(SA_B64, 'base64').toString())
+  const auth = new google.auth.GoogleAuth({
+    credentials,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+  })
+  const sheets = google.sheets({ version: 'v4', auth })
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: 'links!A2:F1000',
+  })
+
+  const rows = res.data.values || []
+  linksCache = rows
+    .filter(r => r[1] && r[3]) // requiere nombre y url
+    .map((r, i) => ({
+      id:          i + 1,
+      category:    r[0]?.trim() || 'General',
+      name:        r[1]?.trim() || '',
+      description: r[2]?.trim() || '',
+      url:         r[3]?.trim() || '',
+      initials:    r[4]?.trim() || r[1]?.trim().substring(0, 2).toUpperCase() || 'XX',
+      color:       r[5]?.trim() || AUTO_COLORS[i % AUTO_COLORS.length],
+    }))
+
+  linksCacheTs = Date.now()
+  return linksCache
+}
+
+app.get('/api/links', async (_req, res) => {
+  try {
+    const links = await getLinksFromSheet()
+    res.json(links)
+  } catch (e) {
+    console.error('Sheets error:', e.message)
+    res.status(500).json({ error: 'No se pudo cargar el sheet' })
+  }
+})
 
 // ── Auth endpoint ───────────────────────────────────────────────────────────
 app.post('/api/auth/google', async (req, res) => {
