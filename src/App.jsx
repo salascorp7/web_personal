@@ -8,6 +8,7 @@ import About from './components/About'
 import Footer from './components/Footer'
 import Game from './components/Game'
 import Links from './components/Links'
+import Tasks from './components/Tasks'
 
 function HomePage() {
   return (
@@ -38,7 +39,8 @@ function App() {
           }
         />
         <Route path="/juego" element={<Game />} />
-        <Route path="/links" element={<><Navbar /><Links /></>} />
+        <Route path="/links"  element={<><Navbar /><Links /></>} />
+        <Route path="/tareas" element={<><Navbar /><Tasks /></>} />
       </Routes>
     </Router>
     </AuthProvider>

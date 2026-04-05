@@ -880,3 +880,77 @@ html {
 .game-btn:active {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* ── Tasks ──────────────────────────────────────────────────────────────── */
+.tasks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+
+.task-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  transition: box-shadow .15s, transform .15s;
+}
+.task-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,.08);
+  transform: translateY(-2px);
+}
+.task-card-overdue {
+  border-left: 3px solid #e63946;
+}
+
+.task-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.task-nombre {
+  font-size: .95rem;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.35;
+}
+
+.task-subgrupo {
+  font-size: .78rem;
+  color: #64748b;
+  background: #f1f5f9;
+  border-radius: 4px;
+  padding: 2px 7px;
+  align-self: flex-start;
+}
+
+.task-dates {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .78rem;
+  color: #64748b;
+}
+.task-overdue-label {
+  color: #e63946;
+  font-weight: 600;
+}
+
+/* Urgencia badges */
+.task-badge {
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.task-badge-alta  { background: #fee2e2; color: #b91c1c; }
+.task-badge-media { background: #fef9c3; color: #92400e; }
+.task-badge-baja  { background: #dcfce7; color: #166534; }

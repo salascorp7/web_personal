@@ -75,9 +75,9 @@ export default function Sidebar() {
   if (!isAdmin) return null
 
   const handleNavItem = (id) => {
-    if (id === 'links') {
+    if (id === 'links' || id === 'tareas') {
       closeOffcanvas()
-      navigate('/links')
+      navigate('/' + id)
     } else {
       setOpenSection(prev => prev === id ? null : id)
     }

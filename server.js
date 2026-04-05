@@ -96,6 +96,53 @@ app.get('/api/links', async (_req, res) => {
   }
 })
 
+// ── Google Sheets — Tareas ──────────────────────────────────────────────────
+let tareasCache   = null
+let tareasCacheTs = 0
+
+async function getTareasFromSheet() {
+  if (tareasCache && Date.now() - tareasCacheTs < CACHE_TTL) return tareasCache
+
+  if (!SHEET_ID || !SA_B64) return []
+
+  const credentials = JSON.parse(Buffer.from(SA_B64, 'base64').toString())
+  const auth = new google.auth.GoogleAuth({
+    credentials,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+  })
+  const sheets = google.sheets({ version: 'v4', auth })
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: 'tareas!A2:F1000',
+  })
+
+  const rows = res.data.values || []
+  tareasCache = rows
+    .filter(r => r[0]) // requiere nombre
+    .map((r, i) => ({
+      id:           i + 1,
+      nombre:       r[0]?.trim() || '',
+      grupo:        r[1]?.trim() || 'General',
+      subgrupo:     r[2]?.trim() || '',
+      fecha_inicio: r[3]?.trim() || '',
+      fecha_fin:    r[4]?.trim() || '',
+      urgencia:     r[5]?.trim().toLowerCase() || 'media',
+    }))
+
+  tareasCacheTs = Date.now()
+  return tareasCache
+}
+
+app.get('/api/tasks', async (_req, res) => {
+  try {
+    const tasks = await getTareasFromSheet()
+    res.json(tasks)
+  } catch (e) {
+    console.error('Sheets tasks error:', e.message)
+    res.status(500).json({ error: 'No se pudo cargar las tareas' })
+  }
+})
+
 // ── Auth endpoint ───────────────────────────────────────────────────────────
 app.post('/api/auth/google', async (req, res) => {
   const { credential } = req.body
