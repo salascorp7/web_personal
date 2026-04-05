@@ -143,6 +143,51 @@ app.get('/api/tasks', async (_req, res) => {
   }
 })
 
+// ── Google Sheets — Entendimiento ──────────────────────────────────────────
+let entCache   = null
+let entCacheTs = 0
+
+async function getEntendimientoFromSheet() {
+  if (entCache && Date.now() - entCacheTs < CACHE_TTL) return entCache
+
+  if (!SHEET_ID || !SA_B64) return []
+
+  const credentials = JSON.parse(Buffer.from(SA_B64, 'base64').toString())
+  const auth = new google.auth.GoogleAuth({
+    credentials,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+  })
+  const sheets = google.sheets({ version: 'v4', auth })
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: 'entendimiento!A2:D1000',
+  })
+
+  const rows = res.data.values || []
+  entCache = rows
+    .filter(r => r[1] && String(r[3] ?? '1').trim() === '1') // requiere nombre y visualizar=1
+    .map((r, i) => ({
+      id:          i + 1,
+      grupo:       r[0]?.trim() || 'General',
+      nombre:      r[1]?.trim() || '',
+      descripcion: r[2]?.trim() || '',
+      visualizar:  String(r[3] ?? '1').trim(),
+    }))
+
+  entCacheTs = Date.now()
+  return entCache
+}
+
+app.get('/api/entendimiento', async (_req, res) => {
+  try {
+    const items = await getEntendimientoFromSheet()
+    res.json(items)
+  } catch (e) {
+    console.error('Sheets entendimiento error:', e.message)
+    res.status(500).json({ error: 'No se pudo cargar entendimiento' })
+  }
+})
+
 // ── Auth endpoint ───────────────────────────────────────────────────────────
 app.post('/api/auth/google', async (req, res) => {
   const { credential } = req.body

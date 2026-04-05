@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import { AuthProvider } from './context/AuthContext'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
@@ -9,13 +10,37 @@ import Footer from './components/Footer'
 import Game from './components/Game'
 import Links from './components/Links'
 import Tasks from './components/Tasks'
+import Entendimiento from './components/Entendimiento'
 
 function HomePage() {
+  const { hash } = useLocation()
+
+  useEffect(() => {
+    if (!hash) return
+    // Esperar a que el DOM esté listo tras la navegación
+    const timer = setTimeout(() => {
+      const el = document.querySelector(hash)
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [hash])
+
   return (
     <>
       <Hero />
       <Projects />
       <About />
+    </>
+  )
+}
+
+// Layout compartido: Sidebar + Navbar siempre presentes en rutas principales
+function Layout({ children }) {
+  return (
+    <>
+      <Sidebar />
+      <Navbar />
+      {children}
     </>
   )
 }
@@ -28,19 +53,18 @@ function App() {
         <Route
           path="/"
           element={
-            <>
-              <Sidebar />
-              <Navbar />
+            <Layout>
               <main>
                 <HomePage />
               </main>
               <Footer />
-            </>
+            </Layout>
           }
         />
         <Route path="/juego" element={<Game />} />
-        <Route path="/links"  element={<><Navbar /><Links /></>} />
-        <Route path="/tareas" element={<><Navbar /><Tasks /></>} />
+        <Route path="/links"  element={<Layout><Links /></Layout>} />
+        <Route path="/tareas"         element={<Layout><Tasks /></Layout>} />
+        <Route path="/entendimiento"  element={<Layout><Entendimiento /></Layout>} />
       </Routes>
     </Router>
     </AuthProvider>

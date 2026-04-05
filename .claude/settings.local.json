@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:salascorp-2feacc83ec90.herokuapp.com)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(node:*)",
+      "Bash(curl:*)",
+      "Bash(gh auth:*)",
+      "Bash(heroku apps:info --app salascorp)",
+      "Bash(gh repo:*)",
+      "Bash(git remote:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(heroku buildpacks:clear --app salascorp)",
+      "Bash(heroku buildpacks:set heroku/nodejs --app salascorp)",
+      "Bash(heroku buildpacks:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:creditossalascorp-fd4f3b6603a0.herokuapp.com)",
+      "Bash(gcloud services enable:*)",
+      "Bash(gcloud iam:*)",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('/tmp/gsheets_links_key.json'\\)\\); print\\(d['client_email']\\)\")",
+      "Bash(python3:*)",
+      "Bash(heroku config:set GSHEETS_LINKS_ID=\"1O8IgiaGUP9HsnHvE2lnmThZyfZ__g0ZLkD7eFF5pcs8\" --app salascorp)",
+      "Bash(heroku logs:*)",
+      "Bash(echo \"PID server: $!\")",
+      "Bash(echo \"PID vite: $!\")",
+      "Bash(pkill -f \"node server.js\")",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /PID 12588 /F)",
+      "Bash(kill 12588)",
+      "Bash(cmd:*)"
+    ]
+  }
+}

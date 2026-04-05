@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
 import { useAuth } from '../context/AuthContext'
 
@@ -96,9 +96,15 @@ function AuthSection() {
   )
 }
 
+function scrollToSection(hash) {
+  const el = document.querySelector(hash)
+  if (el) el.scrollIntoView({ behavior: 'smooth' })
+}
+
 export default function Navbar() {
   const collapseRef  = useRef(null)
   const location     = useLocation()
+  const navigate     = useNavigate()
   const { isAdmin }  = useAuth()
 
   useEffect(() => {
@@ -106,6 +112,18 @@ export default function Navbar() {
       document.querySelector('[data-bs-toggle="collapse"]')?.click()
     }
   }, [location])
+
+  const goToSection = (hash) => {
+    // Cerrar colapso móvil si está abierto
+    if (collapseRef.current?.classList.contains('show')) {
+      document.querySelector('[data-bs-toggle="collapse"]')?.click()
+    }
+    if (location.pathname === '/') {
+      scrollToSection(hash)
+    } else {
+      navigate('/' + hash)
+    }
+  }
 
   return (
     <nav id="header" className="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
@@ -125,16 +143,22 @@ export default function Navbar() {
         )}
 
         {/* Logo — siempre a la izquierda */}
-        <a className="navbar-brand" href="#main">
+        <button className="navbar-brand btn p-0 border-0 bg-transparent" onClick={() => goToSection('#main')}>
           <img src="/assets/images/salascorp_logo.svg" alt="SalasCorp" height="46" />
-        </a>
+        </button>
 
         {/* Links colapsables */}
         <div ref={collapseRef} className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto gap-lg-2">
-            <li className="nav-item"><a className="nav-link" href="#main">Inicio</a></li>
-            <li className="nav-item"><a className="nav-link" href="#projects">Proyectos</a></li>
-            <li className="nav-item"><a className="nav-link" href="#about">Contacto</a></li>
+            <li className="nav-item">
+              <button className="nav-link btn border-0 bg-transparent" onClick={() => goToSection('#main')}>Inicio</button>
+            </li>
+            <li className="nav-item">
+              <button className="nav-link btn border-0 bg-transparent" onClick={() => goToSection('#projects')}>Proyectos</button>
+            </li>
+            <li className="nav-item">
+              <button className="nav-link btn border-0 bg-transparent" onClick={() => goToSection('#about')}>Contacto</button>
+            </li>
           </ul>
         </div>
 
