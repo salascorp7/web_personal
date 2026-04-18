@@ -30,7 +30,7 @@ function AppCard({ link }) {
       <div className="link-app-info">
         <h3 className="link-app-name">{link.name}</h3>
         <p className="link-app-desc">{link.description}</p>
-        <span className="link-app-url">{new URL(link.url).hostname}</span>
+        <span className="link-app-url">{(() => { try { return new URL(link.url).hostname } catch { return link.url } })()}</span>
       </div>
       <div className="link-app-arrow">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
