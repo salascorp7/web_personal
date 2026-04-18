@@ -30,7 +30,10 @@
       "Bash(netstat -ano)",
       "Bash(taskkill /PID 12588 /F)",
       "Bash(kill 12588)",
-      "Bash(cmd:*)"
+      "Bash(cmd:*)",
+      "Bash(awk '{print $5}')",
+      "Bash(awk '{print $1}')",
+      "Bash(xargs kill *)"
     ]
   }
 }

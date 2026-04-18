@@ -11,6 +11,7 @@ import Game from './components/Game'
 import Links from './components/Links'
 import Tasks from './components/Tasks'
 import Entendimiento from './components/Entendimiento'
+import Imagenes from './components/Imagenes'
 
 function HomePage() {
   const { hash } = useLocation()
@@ -65,6 +66,7 @@ function App() {
         <Route path="/links"  element={<Layout><Links /></Layout>} />
         <Route path="/tareas"         element={<Layout><Tasks /></Layout>} />
         <Route path="/entendimiento"  element={<Layout><Entendimiento /></Layout>} />
+        <Route path="/imagenes"       element={<Layout><Imagenes /></Layout>} />
       </Routes>
     </Router>
     </AuthProvider>

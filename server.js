@@ -188,6 +188,84 @@ app.get('/api/entendimiento', async (_req, res) => {
   }
 })
 
+// ── Google Drive — proxy de imágenes privadas ───────────────────────────────
+function getGoogleAuth() {
+  const credentials = JSON.parse(Buffer.from(SA_B64, 'base64').toString())
+  return new google.auth.GoogleAuth({
+    credentials,
+    scopes: [
+      'https://www.googleapis.com/auth/spreadsheets.readonly',
+      'https://www.googleapis.com/auth/drive.readonly',
+    ],
+  })
+}
+
+app.get('/api/images/:fileId', async (req, res) => {
+  if (!SA_B64) return res.status(503).json({ error: 'Sin credenciales' })
+  try {
+    const auth   = getGoogleAuth()
+    const drive  = google.drive({ version: 'v3', auth })
+    const meta   = await drive.files.get({ fileId: req.params.fileId, fields: 'mimeType,name' })
+    const stream = await drive.files.get(
+      { fileId: req.params.fileId, alt: 'media' },
+      { responseType: 'stream' }
+    )
+    res.setHeader('Content-Type', meta.data.mimeType || 'image/jpeg')
+    res.setHeader('Cache-Control', 'private, max-age=3600')
+    stream.data.pipe(res)
+  } catch (e) {
+    console.error('Drive proxy error:', e.message)
+    res.status(404).json({ error: 'Imagen no encontrada' })
+  }
+})
+
+// ── Google Sheets — Imágenes ────────────────────────────────────────────────
+let imagenesCache   = null
+let imagenesCacheTs = 0
+
+async function getImagenesFromSheet() {
+  if (imagenesCache && Date.now() - imagenesCacheTs < CACHE_TTL) return imagenesCache
+
+  if (!SHEET_ID || !SA_B64) return []
+
+  const auth   = getGoogleAuth()
+  const sheets = google.sheets({ version: 'v4', auth })
+  const res    = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: 'imagenes!A2:E1000',
+  })
+
+  // Extrae el file ID de una URL de Drive o devuelve el valor tal cual
+  const extractFileId = (val = '') => {
+    const m = val.match(/\/d\/([a-zA-Z0-9_-]+)/)
+    return m ? m[1] : val.trim()
+  }
+
+  const rows = res.data.values || []
+  imagenesCache = rows
+    .filter(r => r[1] && r[3] && String(r[4] ?? '1').trim() !== '0')
+    .map((r, i) => ({
+      id:          i + 1,
+      categoria:   r[0]?.trim() || 'General',
+      nombre:      r[1]?.trim() || '',
+      descripcion: r[2]?.trim() || '',
+      fileId:      extractFileId(r[3]),
+      visualizar:  String(r[4] ?? '1').trim(),
+    }))
+
+  imagenesCacheTs = Date.now()
+  return imagenesCache
+}
+
+app.get('/api/imagenes', async (_req, res) => {
+  try {
+    res.json(await getImagenesFromSheet())
+  } catch (e) {
+    console.error('Sheets imagenes error:', e.message)
+    res.status(500).json({ error: 'No se pudo cargar imágenes' })
+  }
+})
+
 // ── Auth endpoint ───────────────────────────────────────────────────────────
 app.post('/api/auth/google', async (req, res) => {
   const { credential } = req.body
