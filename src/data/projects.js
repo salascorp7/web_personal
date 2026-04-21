@@ -27,15 +27,15 @@ const projects = [
   },
   {
     id: 3,
-    title: 'API Twitter',
-    description: 'Buscador de tweets mediante hashtags, con visualización de fechas y variables principales.',
-    image: '/assets/speakers/twitter_cuadrada.jpg',
+    title: 'Monitoreo Campañas Sector Financiero',
+    description: 'Dashboard para el monitoreo de campañas del sector financiero, seguimiento de métricas clave y análisis de rendimiento.',
+    image: '/assets/speakers/trafico_cuadrado.jpg',
     badges: [
-      { text: 'R', bg: 'primary' },
-      { text: 'Shiny', bg: 'success' },
-      { text: 'API REST', bg: 'dark' },
+      { text: 'React', bg: 'info', textColor: 'dark' },
+      { text: 'Node.js', bg: 'success' },
+      { text: 'Heroku', bg: 'light', textColor: 'dark' },
     ],
-    link: 'https://salascorp.shinyapps.io/appTweet/',
+    link: 'https://monitoreofinanciero-34005efcf9c8.herokuapp.com/',
   },
   {
     id: 4,
@@ -70,7 +70,8 @@ const projects = [
       { text: 'Looker Studio', bg: 'warning', textColor: 'dark' },
       { text: 'Google Analytics', bg: 'info', textColor: 'dark' },
     ],
-    link: 'https://datastudio.google.com/embed/reporting/7f3ebcee-60f2-4aa7-97f0-febeaf6bfa45/page/1M',
+    link: null,
+    comingSoon: true,
   },
   {
     id: 7,
