@@ -67,11 +67,11 @@ const projects = [
     description: 'Dashboard para el monitoreo del tráfico generado por esta web, identificando las principales variables.',
     image: '/assets/speakers/trafico_cuadrado.jpg',
     badges: [
-      { text: 'Looker Studio', bg: 'warning', textColor: 'dark' },
+      { text: 'Datastudio', bg: 'warning', textColor: 'dark' },
       { text: 'Google Analytics', bg: 'info', textColor: 'dark' },
+      { text: 'Google Tag Manager', bg: 'secondary' },
     ],
-    link: null,
-    comingSoon: true,
+    link: 'https://datastudio.google.com/s/kEuknYGkkms',
   },
   {
     id: 7,
