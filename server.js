@@ -268,7 +268,10 @@ app.get('/api/imagenes', async (_req, res) => {
 })
 
 // ── Google Analytics — Sync a Sheets ───────────────────────────────────────
-const GA4_PROPERTY_ID = process.env.GA4_PROPERTY_ID || '534540730'
+const GA4_PROPERTIES = [
+  { propertyId: process.env.GA4_PROPERTY_ID  || '534540730', sheetTab: 'analytics_proyecto' },
+  { propertyId: process.env.GA4_PROPERTY_ID2 || '271107103', sheetTab: 'analytics_salascorp' },
+]
 const ANALYTICS_HEADERS = [
   'fecha', 'sesiones', 'usuarios', 'nuevos_usuarios',
   'page_views', 'duracion_seg', 'tasa_rebote',
@@ -286,9 +289,9 @@ function getAnalyticsAuth() {
   })
 }
 
-async function runGA4Report(analyticsdata, dateStr, dimensions, metrics, orderMetric) {
+async function runGA4Report(analyticsdata, dateStr, dimensions, metrics, orderMetric, propertyId) {
   const req = {
-    property: `properties/${GA4_PROPERTY_ID}`,
+    property: `properties/${propertyId}`,
     requestBody: {
       dateRanges: [{ startDate: dateStr, endDate: dateStr }],
       metrics: metrics.map(name => ({ name })),
@@ -303,7 +306,7 @@ async function runGA4Report(analyticsdata, dateStr, dimensions, metrics, orderMe
   return r.data.rows || []
 }
 
-async function syncAnalyticsToSheet() {
+async function syncAnalyticsToSheet(propertyId, sheetTab) {
   if (!SHEET_ID || !SA_B64) return { error: 'Sin credenciales' }
 
   const auth          = getAnalyticsAuth()
@@ -318,18 +321,18 @@ async function syncAnalyticsToSheet() {
   // Verificar si la fecha ya existe para no duplicar
   const existing = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
-    range: 'analytics!A:A',
+    range: `${sheetTab}!A:A`,
   })
   const existingDates = (existing.data.values || []).map(r => r[0])
   if (existingDates.includes(dateStr)) {
-    return { skipped: true, date: dateStr, message: 'Fecha ya registrada' }
+    return { skipped: true, date: dateStr, message: 'Fecha ya registrada', tab: sheetTab }
   }
 
   // Query 1: métricas globales del día
   const mainRows = await runGA4Report(analyticsdata, dateStr, null, [
     'sessions', 'activeUsers', 'newUsers',
     'screenPageViews', 'averageSessionDuration', 'bounceRate',
-  ])
+  ], propertyId)
   const mv        = mainRows[0]?.metricValues || []
   const sessions  = mv[0]?.value  || '0'
   const users     = mv[1]?.value  || '0'
@@ -339,10 +342,10 @@ async function syncAnalyticsToSheet() {
   const bounce    = parseFloat(mv[5]?.value || '0').toFixed(4)
 
   // Queries de top dimensiones
-  const topPageRows    = await runGA4Report(analyticsdata, dateStr, ['pagePath'],                    ['screenPageViews'],        'screenPageViews')
-  const topChannelRows = await runGA4Report(analyticsdata, dateStr, ['sessionDefaultChannelGroup'],  ['sessions'],               'sessions')
-  const topDeviceRows  = await runGA4Report(analyticsdata, dateStr, ['deviceCategory'],              ['sessions'],               'sessions')
-  const topCountryRows = await runGA4Report(analyticsdata, dateStr, ['country'],                     ['sessions'],               'sessions')
+  const topPageRows    = await runGA4Report(analyticsdata, dateStr, ['pagePath'],                   ['screenPageViews'], 'screenPageViews', propertyId)
+  const topChannelRows = await runGA4Report(analyticsdata, dateStr, ['sessionDefaultChannelGroup'], ['sessions'],        'sessions',        propertyId)
+  const topDeviceRows  = await runGA4Report(analyticsdata, dateStr, ['deviceCategory'],             ['sessions'],        'sessions',        propertyId)
+  const topCountryRows = await runGA4Report(analyticsdata, dateStr, ['country'],                    ['sessions'],        'sessions',        propertyId)
 
   const topPage    = topPageRows[0]?.dimensionValues?.[0]?.value    || '(ninguna)'
   const topChannel = topChannelRows[0]?.dimensionValues?.[0]?.value || '(ninguno)'
@@ -353,7 +356,7 @@ async function syncAnalyticsToSheet() {
   if (!existingDates.length) {
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: 'analytics!A1:K1',
+      range: `${sheetTab}!A1:K1`,
       valueInputOption: 'RAW',
       requestBody: { values: [ANALYTICS_HEADERS] },
     })
@@ -362,7 +365,7 @@ async function syncAnalyticsToSheet() {
   // Agregar fila con los datos del día
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,
-    range: 'analytics!A:K',
+    range: `${sheetTab}!A:K`,
     valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
     requestBody: {
@@ -374,50 +377,59 @@ async function syncAnalyticsToSheet() {
     },
   })
 
-  console.log(`Analytics sync OK — ${dateStr}: ${sessions} sesiones, ${pageViews} page views`)
-  return { success: true, date: dateStr, sessions, users: users, pageViews }
+  console.log(`Analytics sync OK [${sheetTab}] — ${dateStr}: ${sessions} sesiones, ${pageViews} page views`)
+  return { success: true, date: dateStr, sessions, users, pageViews, tab: sheetTab }
 }
 
-// Endpoint manual (solo admin)
+async function syncAllProperties() {
+  return Promise.all(GA4_PROPERTIES.map(p => syncAnalyticsToSheet(p.propertyId, p.sheetTab)))
+}
+
+// Endpoint manual — sincroniza todas las propiedades (solo admin)
 app.post('/api/analytics/sync', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1]
   if (!token) return res.status(401).json({ error: 'No autorizado' })
   try { jwt.verify(token, JWT_SECRET) } catch { return res.status(401).json({ error: 'Token inválido' }) }
 
   try {
-    const result = await syncAnalyticsToSheet()
-    res.json(result)
+    const results = await syncAllProperties()
+    res.json(results)
   } catch (e) {
     console.error('Analytics sync error:', e.message)
     res.status(500).json({ error: e.message })
   }
 })
 
-// Leer historial del sheet (solo admin)
+// Leer historial de una propiedad específica (solo admin)
+// ?tab=analytics_salascorp  o  ?tab=analytics_proyecto
 app.get('/api/analytics', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1]
   if (!token) return res.status(401).json({ error: 'No autorizado' })
   try { jwt.verify(token, JWT_SECRET) } catch { return res.status(401).json({ error: 'Token inválido' }) }
+
+  const tab = req.query.tab || 'analytics_salascorp'
+  const allowed = GA4_PROPERTIES.map(p => p.sheetTab)
+  if (!allowed.includes(tab)) return res.status(400).json({ error: 'Tab no válida' })
 
   try {
     const auth   = getAnalyticsAuth()
     const sheets = google.sheets({ version: 'v4', auth })
     const r      = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'analytics!A2:K1000',
+      range: `${tab}!A2:K1000`,
     })
     const rows = (r.data.values || []).map(row => ({
-      fecha:          row[0]  || '',
-      sesiones:       Number(row[1]  || 0),
-      usuarios:       Number(row[2]  || 0),
-      nuevos_usuarios:Number(row[3]  || 0),
-      page_views:     Number(row[4]  || 0),
-      duracion_seg:   parseFloat(row[5] || 0),
-      tasa_rebote:    parseFloat(row[6] || 0),
-      pagina_top:     row[7]  || '',
-      canal_top:      row[8]  || '',
-      dispositivo_top:row[9]  || '',
-      pais_top:       row[10] || '',
+      fecha:           row[0]  || '',
+      sesiones:        Number(row[1]  || 0),
+      usuarios:        Number(row[2]  || 0),
+      nuevos_usuarios: Number(row[3]  || 0),
+      page_views:      Number(row[4]  || 0),
+      duracion_seg:    parseFloat(row[5] || 0),
+      tasa_rebote:     parseFloat(row[6] || 0),
+      pagina_top:      row[7]  || '',
+      canal_top:       row[8]  || '',
+      dispositivo_top: row[9]  || '',
+      pais_top:        row[10] || '',
     }))
     res.json(rows)
   } catch (e) {
@@ -426,12 +438,12 @@ app.get('/api/analytics', async (req, res) => {
   }
 })
 
-// Cron diario a las 6am UTC (1am hora Colombia)
+// Cron diario a las 6am UTC (1am hora Colombia) — sincroniza todas las propiedades
 cron.schedule('0 6 * * *', async () => {
   console.log('Cron: iniciando sync de analytics...')
   try {
-    const result = await syncAnalyticsToSheet()
-    console.log('Cron analytics result:', result)
+    const results = await syncAllProperties()
+    console.log('Cron analytics results:', results)
   } catch (e) {
     console.error('Cron analytics error:', e.message)
   }
