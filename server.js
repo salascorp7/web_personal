@@ -269,7 +269,7 @@ app.get('/api/imagenes', async (_req, res) => {
 
 // ── Google Analytics — Sync a Sheets ───────────────────────────────────────
 const GA4_PROPERTIES = [
-  { propertyId: process.env.GA4_PROPERTY_ID  || '534540730', sheetTab: 'analytics_proyecto' },
+  { propertyId: process.env.GA4_PROPERTY_ID  || '534540730', sheetTab: 'analytics_monitoreo_financiero' },
   { propertyId: process.env.GA4_PROPERTY_ID2 || '271107103', sheetTab: 'analytics_salascorp' },
 ]
 const ANALYTICS_HEADERS = [
