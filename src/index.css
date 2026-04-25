@@ -1973,11 +1973,12 @@ html {
 .mon-table td {
   padding: .55rem .8rem;
   color: #cbd5e1;
-  border-bottom: 1px solid #0f172a;
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
   white-space: nowrap;
 }
 .mon-table tr:last-child td { border-bottom: none; }
-.mon-table tr:hover td { background: rgba(99,102,241,.05); }
+.mon-table tr:hover td { background: #1e293b; }
 .mon-td-page { max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
 
 @media (max-width: 640px) {
