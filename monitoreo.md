@@ -257,6 +257,21 @@ const WEBS = [
 node-cron — scheduling del cron diario
 ```
 
+### Backfill — recuperar días perdidos
+
+Si el cron falla (reinicio de Heroku, downtime), los días no se guardan automáticamente. Para recuperarlos hay dos opciones:
+
+**Opción A — Desde el dashboard `/monitoreo`**
+Panel "Rellenar historial perdido" en la parte superior: ingresar rango de fechas y clic en "Ejecutar backfill". Sincroniza todas las propiedades para cada día del rango. Ignora fechas ya existentes.
+
+**Opción B — Via API directamente**
+```bash
+curl -X POST https://salascorp-2feacc83ec90.herokuapp.com/api/analytics/backfill \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
+  -d '{"startDate":"2026-04-25","endDate":"2026-05-21"}'
+```
+
 ---
 
 ## 5. Dashboard /monitoreo (web propia, solo admin)
@@ -275,8 +290,17 @@ Ruta `/monitoreo` en la web, accesible solo para usuarios con rol `admin`. Se en
 
 | Archivo | Descripción |
 |---------|-------------|
-| `src/components/Monitoreo.jsx` | Componente principal del dashboard |
+| `src/components/Monitoreo.jsx` | Componente principal del dashboard + `BackfillPanel` |
 | `src/hooks/useMonitoreo.js`    | Hook que fetch `/api/analytics?tab=X` con JWT |
+
+### Endpoints de analytics en server.js
+
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `/api/analytics/sync` | POST | Sincroniza todas las propiedades (ayer) |
+| `/api/analytics/backfill` | POST | Rellena rango `startDate`–`endDate` para todas las propiedades |
+| `/api/analytics/debug-sync` | POST | Diagnóstico: prueba una fecha/propiedad sin escribir al sheet |
+| `/api/analytics?tab=X` | GET | Devuelve histórico de una pestaña específica |
 
 ### Nota de diseño
 - Fondo oscuro `#0f172a` en toda la página, consistente con el resto del panel admin
@@ -300,7 +324,8 @@ Ruta `/monitoreo` en la web, accesible solo para usuarios con rol `admin`. Se en
 - [ ] Agregar `GA4_PROPERTY_IDn` en `.env` y en Heroku config vars
 - [ ] Agregar propiedad al array `GA4_PROPERTIES` en `server.js`
 - [ ] Agregar web al array `WEBS` en `Monitoreo.jsx`
-- [ ] Verificar sync manual y confirmar fila en el sheet
+- [ ] Verificar sync manual (`POST /api/analytics/sync`) y confirmar fila en el sheet
+- [ ] Si hay días sin datos, usar backfill desde `/monitoreo` o via API
 - [ ] Conectar pestaña del sheet como fuente en Looker Studio (opcional)
 
 ---
@@ -314,3 +339,28 @@ Ruta `/monitoreo` en la web, accesible solo para usuarios con rol `admin`. Se en
 - El cron usa `node-cron` dentro del proceso de Node.js — funciona bien en Heroku dynos pagos (siempre activos). En dynos gratuitos (que duermen) el cron no correría.
 - El sync no duplica fechas: antes de escribir verifica si la fecha ya existe en la columna A del sheet.
 - Hay dos APIs distintas en GCP — habilitar **"Google Analytics Data API"**, no "Google Analytics API" (la vieja, para Universal Analytics).
+- El cron usa `node-cron` dentro del proceso de Node.js — si Heroku reinicia el dyno, los días no corridos se pierden. Usar backfill para recuperarlos.
+
+---
+
+## Bug documentado: propertyId undefined en runGA4Report (resuelto en v33)
+
+**Qué fallaba:** Entre el 25/04/2026 y el 21/05/2026 el cron y el backfill no guardaron ningún dato. El dashboard mostraba solo el registro del 24/04/2026.
+
+**Causa raíz:** La función `runGA4Report` tiene 6 parámetros:
+```js
+async function runGA4Report(analyticsdata, dateStr, dimensions, metrics, orderMetric, propertyId)
+```
+La llamada para métricas principales (sin dimensiones) solo pasaba 5 argumentos — `propertyId` caía en el slot de `orderMetric` y el 6to parámetro quedaba `undefined`:
+```js
+// ❌ Bug: propertyId va al slot equivocado
+await runGA4Report(analyticsdata, dateStr, null, ['sessions', ...], propertyId)
+
+// ✅ Fix: agregar null explícito para orderMetric
+await runGA4Report(analyticsdata, dateStr, null, ['sessions', ...], null, propertyId)
+```
+GA4 recibía `property: "properties/undefined"` y lanzaba un error que el try/catch silenciaba, devolviendo `success: false` sin escribir nada.
+
+**Cómo se detectó:** Endpoint `/api/analytics/debug-sync` que loguea cada paso de la función antes de escribir al sheet. El log mostraba el error exacto de la API de GA4.
+
+**Cómo se recuperó el historial:** Backfill local contra el servidor en desarrollo apuntando al sheet real de producción. Se recuperaron 27 días × 2 propiedades = 54 registros.
