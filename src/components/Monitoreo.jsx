@@ -1,7 +1,6 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useMonitoreo } from '../hooks/useMonitoreo'
-import { useAuth } from '../context/AuthContext'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmtDuration(sec) {
@@ -254,59 +253,6 @@ const WEBS = [
   { label: 'Monitoreo Financiero',   tab: 'analytics_monitoreo_financiero' },
 ]
 
-// ── Backfill Panel ────────────────────────────────────────────────────────────
-function BackfillPanel() {
-  const { getToken } = useAuth()
-  const [start, setStart]   = useState('')
-  const [end, setEnd]       = useState('')
-  const [status, setStatus] = useState(null)
-  const [loading, setLoading] = useState(false)
-
-  const run = useCallback(async () => {
-    if (!start || !end) return
-    setLoading(true)
-    setStatus(null)
-    try {
-      const r = await fetch('/api/analytics/backfill', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({ startDate: start, endDate: end }),
-      })
-      const data = await r.json()
-      const ok      = data.results?.filter(x => x.success).length  || 0
-      const skipped = data.results?.filter(x => x.skipped).length  || 0
-      const errors  = data.results?.filter(x => x.error).length    || 0
-      setStatus({ ok, skipped, errors, total: data.processed })
-    } catch (e) {
-      setStatus({ errors: 1, msg: e.message })
-    } finally {
-      setLoading(false)
-    }
-  }, [start, end, getToken])
-
-  return (
-    <div className="mon-backfill">
-      <div className="mon-backfill-title">Rellenar historial perdido</div>
-      <div className="mon-backfill-row">
-        <input type="date" value={start} onChange={e => setStart(e.target.value)} className="mon-backfill-input" />
-        <span className="mon-backfill-sep">→</span>
-        <input type="date" value={end}   onChange={e => setEnd(e.target.value)}   className="mon-backfill-input" />
-        <button className="mon-backfill-btn" onClick={run} disabled={loading || !start || !end}>
-          {loading ? 'Sincronizando...' : 'Ejecutar backfill'}
-        </button>
-      </div>
-      {status && (
-        <div className="mon-backfill-result">
-          {status.msg
-            ? <span style={{ color: '#ef4444' }}>Error: {status.msg}</span>
-            : <span>Procesados: {status.total} — OK: {status.ok} — Ya existían: {status.skipped} — Errores: {status.errors}</span>
-          }
-        </div>
-      )}
-    </div>
-  )
-}
-
 export default function Monitoreo() {
   const [activeIdx, setActiveIdx] = useState(0)
   const active = WEBS[activeIdx]
@@ -325,8 +271,6 @@ export default function Monitoreo() {
           <p className="links-subtitle">Analítica de tráfico — datos sincronizados desde Google Analytics</p>
         </div>
       </div>
-
-      <BackfillPanel />
 
       {/* Selector de web */}
       <div className="mon-tabs">
