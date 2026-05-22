@@ -335,7 +335,7 @@ async function syncAnalyticsToSheet(propertyId, sheetTab, dateOverride = null) {
   const mainRows = await runGA4Report(analyticsdata, dateStr, null, [
     'sessions', 'activeUsers', 'newUsers',
     'screenPageViews', 'averageSessionDuration', 'bounceRate',
-  ], propertyId)
+  ], null, propertyId)
   const mv        = mainRows[0]?.metricValues || []
   const sessions  = mv[0]?.value  || '0'
   const users     = mv[1]?.value  || '0'
@@ -419,7 +419,7 @@ app.post('/api/analytics/debug-sync', async (req, res) => {
     // Query GA4
     const mainRows = await runGA4Report(analyticsdata, date, null, [
       'sessions', 'activeUsers', 'newUsers', 'screenPageViews', 'averageSessionDuration', 'bounceRate',
-    ], propertyId)
+    ], null, propertyId)
     const mv = mainRows[0]?.metricValues || []
     debug.push({ step: 'ga4_main', rowsCount: mainRows.length, values: mv.map(v => v.value) })
 
