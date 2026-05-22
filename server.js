@@ -306,17 +306,20 @@ async function runGA4Report(analyticsdata, dateStr, dimensions, metrics, orderMe
   return r.data.rows || []
 }
 
-async function syncAnalyticsToSheet(propertyId, sheetTab) {
+async function syncAnalyticsToSheet(propertyId, sheetTab, dateOverride = null) {
   if (!SHEET_ID || !SA_B64) return { error: 'Sin credenciales' }
 
   const auth          = getAnalyticsAuth()
   const analyticsdata = google.analyticsdata({ version: 'v1beta', auth })
   const sheets        = google.sheets({ version: 'v4', auth })
 
-  // Fecha de ayer
-  const d = new Date()
-  d.setDate(d.getDate() - 1)
-  const dateStr = d.toISOString().split('T')[0]
+  // Fecha: parámetro opcional, si no se pasa usa ayer
+  let dateStr = dateOverride
+  if (!dateStr) {
+    const d = new Date()
+    d.setDate(d.getDate() - 1)
+    dateStr = d.toISOString().split('T')[0]
+  }
 
   // Verificar si la fecha ya existe para no duplicar
   const existing = await sheets.spreadsheets.values.get({
@@ -398,6 +401,41 @@ app.post('/api/analytics/sync', async (req, res) => {
     console.error('Analytics sync error:', e.message)
     res.status(500).json({ error: e.message })
   }
+})
+
+// Backfill histórico — sincroniza un rango de fechas para todas las propiedades (solo admin)
+// Body: { startDate: "2026-04-25", endDate: "2026-05-21" }
+app.post('/api/analytics/backfill', async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1]
+  if (!token) return res.status(401).json({ error: 'No autorizado' })
+  try { jwt.verify(token, JWT_SECRET) } catch { return res.status(401).json({ error: 'Token inválido' }) }
+
+  const { startDate, endDate } = req.body
+  if (!startDate || !endDate) return res.status(400).json({ error: 'startDate y endDate requeridos (YYYY-MM-DD)' })
+
+  // Generar lista de fechas en el rango
+  const dates = []
+  const cur = new Date(startDate + 'T12:00:00Z')
+  const end = new Date(endDate   + 'T12:00:00Z')
+  while (cur <= end) {
+    dates.push(cur.toISOString().split('T')[0])
+    cur.setDate(cur.getDate() + 1)
+  }
+
+  const results = []
+  for (const date of dates) {
+    for (const prop of GA4_PROPERTIES) {
+      try {
+        const r = await syncAnalyticsToSheet(prop.propertyId, prop.sheetTab, date)
+        results.push({ date, tab: prop.sheetTab, ...r })
+      } catch (e) {
+        results.push({ date, tab: prop.sheetTab, error: e.message })
+      }
+    }
+  }
+
+  console.log(`Backfill completado: ${dates.length} fechas × ${GA4_PROPERTIES.length} propiedades`)
+  res.json({ processed: results.length, results })
 })
 
 // Leer historial de una propiedad específica (solo admin)
