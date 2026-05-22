@@ -388,6 +388,47 @@ async function syncAllProperties() {
   return Promise.all(GA4_PROPERTIES.map(p => syncAnalyticsToSheet(p.propertyId, p.sheetTab)))
 }
 
+// Diagnóstico: prueba sync de UNA fecha y UNA propiedad con logs detallados (solo admin)
+app.post('/api/analytics/debug-sync', async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1]
+  if (!token) return res.status(401).json({ error: 'No autorizado' })
+  try { jwt.verify(token, JWT_SECRET) } catch { return res.status(401).json({ error: 'Token inválido' }) }
+
+  const { date, propertyId, sheetTab } = req.body
+  const debug = []
+
+  try {
+    debug.push({ step: 'start', SHEET_ID: !!SHEET_ID, SA_B64: !!SA_B64, date, propertyId, sheetTab })
+
+    const auth          = getAnalyticsAuth()
+    const analyticsdata = google.analyticsdata({ version: 'v1beta', auth })
+    const sheets        = google.sheets({ version: 'v4', auth })
+
+    // Leer fechas existentes
+    const existing = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${sheetTab}!A:A`,
+    })
+    const existingDates = (existing.data.values || []).map(r => r[0])
+    debug.push({ step: 'existing_dates', count: existingDates.length, first5: existingDates.slice(0, 5), last5: existingDates.slice(-5), dateToSync: date, alreadyExists: existingDates.includes(date) })
+
+    if (existingDates.includes(date)) {
+      return res.json({ debug, result: 'SKIPPED — fecha ya existe' })
+    }
+
+    // Query GA4
+    const mainRows = await runGA4Report(analyticsdata, date, null, [
+      'sessions', 'activeUsers', 'newUsers', 'screenPageViews', 'averageSessionDuration', 'bounceRate',
+    ], propertyId)
+    const mv = mainRows[0]?.metricValues || []
+    debug.push({ step: 'ga4_main', rowsCount: mainRows.length, values: mv.map(v => v.value) })
+
+    res.json({ debug, result: 'OK — diagnóstico completo, no escribió nada' })
+  } catch (e) {
+    res.json({ debug, error: e.message, stack: e.stack?.split('\n').slice(0, 5) })
+  }
+})
+
 // Endpoint manual — sincroniza todas las propiedades (solo admin)
 app.post('/api/analytics/sync', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1]
