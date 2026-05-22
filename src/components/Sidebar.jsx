@@ -152,21 +152,6 @@ export default function Sidebar() {
         />
       </div>
 
-      {/* Accesos directos — home */}
-      <div className="sb-nav-divider-label">Página principal</div>
-      <nav className="sb-nav sb-nav-home">
-        {homeLinks.map(item => (
-          <button
-            key={item.id}
-            className="sb-nav-item"
-            onClick={() => handleHomeLink(item.hash)}
-          >
-            <span className="sb-nav-icon">{item.icon}</span>
-            <span className="sb-nav-label">{item.label}</span>
-          </button>
-        ))}
-      </nav>
-
       <div className="sb-nav-divider-label">Admin</div>
       {/* Navegación admin */}
       <nav className="sb-nav">
